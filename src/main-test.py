@@ -1,4 +1,5 @@
 import os, world
+from game import Game
 from pynput import keyboard
 from enum import Enum
 
@@ -46,18 +47,20 @@ def player_move(move_x, move_y):
     for x in range(world.CONSTANT_WORLD_SIZE[0]):
         for y in range(world.CONSTANT_WORLD_SIZE[1]):
             # Is the player moving within the board bounds?
-            if world.GRID[x][y] == world.CELL_TEXTURE_PLAYER and 0 <= (x - move_x) < world.CONSTANT_WORLD_SIZE[0] and 0 <= (y - move_y) < world.CONSTANT_WORLD_SIZE[1]:
+            if game_instance.world_grid[x][y] == world.CELL_TEXTURE_PLAYER and 0 <= (x - move_x) < world.CONSTANT_WORLD_SIZE[0] and 0 <= (y - move_y) < world.CONSTANT_WORLD_SIZE[1]:
                 # Prevent movement onto obstacles
-                if world.GRID[x - move_x][y - move_y] == world.CELL_TEXTURE_OBSTACLE:
+                if game_instance.world_grid[x - move_x][y - move_y] == world.CELL_TEXTURE_OBSTACLE:
                     continue
                 else:
                     # Move player
-                    world.GRID[x - move_x][y - move_y] = world.CELL_TEXTURE_PLAYER
-                    world.GRID[x][y] = world.CELL_TEXTURE_NOTHING
+                    game_instance.world_grid[x - move_x][y - move_y] = world.CELL_TEXTURE_PLAYER
+                    game_instance.world_grid[x][y] = world.CELL_TEXTURE_NOTHING
                     
                     # If player is moving out of bounds, assume world transition
-                    if ((x - move_x) == (0 or world.CONSTANT_WORLD_SIZE[0] - 1)) or ((y - move_y) == (0 or world.CONSTANT_WORLD_SIZE[1] - 1)):
-                        world.generate_next_world()
+                    if ((x - move_x == 0) or (x - move_x == world.CONSTANT_WORLD_SIZE[0] - 1)) or ((y - move_y == 0) or (y - move_y == world.CONSTANT_WORLD_SIZE[1] - 1)):
+                        world.CURRENT_WORLD_NUM += 1
+                        print("TEST")
+                        game_instance.generate_random_world(num_of_objects=10, num_of_connections=2, num_of_coins=0, num_of_monsters=0)
                     return
 
 def player_attack():
@@ -66,11 +69,11 @@ def player_attack():
     for x in range(world.CONSTANT_WORLD_SIZE[0]):
         for y in range(world.CONSTANT_WORLD_SIZE[1]):
             # Is the player moving within the board bounds
-            if world.GRID[x][y] == world.CELL_TEXTURE_PLAYER:
+            if game_instance.world_grid[x][y] == world.CELL_TEXTURE_PLAYER:
                 for dir in ATTACK_DIRECTIONS:
                     if 0 <= (x - dir[0]) < world.CONSTANT_WORLD_SIZE[0] and 0 <= (y - dir[1]) < world.CONSTANT_WORLD_SIZE[1]:
                         # Add attack texture near player
-                        world.GRID[x - dir[0]][y - dir[1]] = world.CELL_TEXTURE_ATTACK
+                        game_instance.world_grid[x - dir[0]][y - dir[1]] = world.CELL_TEXTURE_ATTACK
                         attack_locations.append((x - dir[0], y - dir[1]))
     
     # Hacked animation sequence for attacks
@@ -78,12 +81,12 @@ def player_attack():
     display_map(stdscr, 0.15)
 
     for attack in attack_locations:
-        world.GRID[attack[0]][attack[1]] = world.CELL_TEXTURE_ATTACK_AFTERMATH
+        game_instance.world_grid[attack[0]][attack[1]] = world.CELL_TEXTURE_ATTACK_AFTERMATH
 
     display_map(stdscr, 0.15)
 
     for attack in attack_locations:
-        world.GRID[attack[0]][attack[1]] = world.CELL_TEXTURE_NOTHING
+        game_instance.world_grid[attack[0]][attack[1]] = world.CELL_TEXTURE_NOTHING
 
 def random_move_monster():
     random_x, random_y = world.generate_random_pair(min_x=-1, max_x=1, min_y=-1, max_y=1, pairs_to_avoid=[{0, 0}])
@@ -94,16 +97,16 @@ def random_move_monster():
         for y in range(world.CONSTANT_WORLD_SIZE[1]):
             # Check if we have not already moved this monster
             if {x, y} not in indexes_to_ignore:
-                if world.GRID[x][y] == world.CELL_TEXTURE_MONSTER and 0 <= (x - random_x) < world.CONSTANT_WORLD_SIZE[0] and 0 <= (y - random_y) < world.CONSTANT_WORLD_SIZE[1]:
+                if game_instance.world_grid[x][y] == world.CELL_TEXTURE_MONSTER and 0 <= (x - random_x) < world.CONSTANT_WORLD_SIZE[0] and 0 <= (y - random_y) < world.CONSTANT_WORLD_SIZE[1]:
                     # Prevent monster from moving onto obstacles & other monsters
-                    if world.GRID[x - random_x][y - random_y] == (world.CELL_TEXTURE_OBSTACLE or world.CELL_TEXTURE_MONSTER):
+                    if game_instance.world_grid[x - random_x][y - random_y] == (world.CELL_TEXTURE_OBSTACLE or world.CELL_TEXTURE_MONSTER):
                         indexes_to_ignore.append({x, y})
                         continue
 
                     # Move monster
-                    world.GRID[x - random_x][y - random_y] = world.CELL_TEXTURE_MONSTER
+                    game_instance.world_grid[x - random_x][y - random_y] = world.CELL_TEXTURE_MONSTER
                     indexes_to_ignore.append({x - random_x, y - random_y})
-                    world.GRID[x][y] = world.CELL_TEXTURE_NOTHING
+                    game_instance.world_grid[x][y] = world.CELL_TEXTURE_NOTHING
 
 '''
 Updates map visuals via curses library.
@@ -114,7 +117,7 @@ def display_map(stdscr, interval):
     stdscr.clear()
     max_y, max_x = stdscr.getmaxyx()
     # Print out all display items: includes world and UI
-    for r_idx, row in enumerate(world.GRID):
+    for r_idx, row in enumerate(game_instance.world_grid):
         for c_idx, element in enumerate(row):
             # Calculate position for each element
             y_pos = r_idx
@@ -163,9 +166,8 @@ def main(stdscr_local):
     tick_thread.join()
 
 if __name__ == '__main__':
-
-    world.generate_random_world(num_of_objects=10, num_of_connections=2, num_of_coins=5, num_of_monsters=3)
-
+    global game_instance
+    game_instance = Game()
     curses.wrapper(main)
     
     print("Game successfully shutdown.")
