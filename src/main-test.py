@@ -1,7 +1,6 @@
 import os, world
 from game import Game
 from pynput import keyboard
-from enum import Enum
 
 import time, threading, curses
 
@@ -57,10 +56,13 @@ def player_move(move_x, move_y):
                     game_instance.world_grid[x][y] = world.CELL_TEXTURE_NOTHING
                     
                     # If player is moving out of bounds, assume world transition
-                    if ((x - move_x == 0) or (x - move_x == world.CONSTANT_WORLD_SIZE[0] - 1)) or ((y - move_y == 0) or (y - move_y == world.CONSTANT_WORLD_SIZE[1] - 1)):
-                        world.CURRENT_WORLD_NUM += 1
+                    if (x - move_x == 0) or \
+                        (x - move_x == world.CONSTANT_WORLD_SIZE[0] - 1) or \
+                        (y - move_y == 0) or \
+                        (y - move_y == world.CONSTANT_WORLD_SIZE[1] - 1):
+                        #world.CURRENT_WORLD_NUM += 1
                         print("TEST")
-                        game_instance.generate_random_world(num_of_objects=10, num_of_connections=2, num_of_coins=0, num_of_monsters=0)
+                        game_instance.regenerate_world()
                     return
 
 def player_attack():

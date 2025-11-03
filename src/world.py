@@ -3,7 +3,7 @@ from enum import Enum
 
 # World details
 CONSTANT_WORLD_SIZE = (15, 15)
-CURRENT_WORLD_NUM = 1
+CURRENT_WORLD_NUM = 0
 
 class Cardinals(Enum):
     North = 1
