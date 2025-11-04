@@ -5,6 +5,10 @@ class Game:
         self.world_grid = None
         self.regenerate_world()
 
+    def increment_coin_count(self):
+        world.CURRENT_COINS_NUM += 1
+        world.UI_GRID[world.coins_number[0]][world.coins_number[1]] = str(world.CURRENT_COINS_NUM)
+
     def regenerate_world(self):
         """Generates a new world and updates the instance variable."""
         world.CURRENT_WORLD_NUM += 1

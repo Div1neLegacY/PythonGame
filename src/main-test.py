@@ -47,6 +47,11 @@ def player_move(move_x, move_y):
         for y in range(world.CONSTANT_WORLD_SIZE[1]):
             # Is the player moving within the board bounds?
             if game_instance.world_grid[x][y] == world.CELL_TEXTURE_PLAYER and 0 <= (x - move_x) < world.CONSTANT_WORLD_SIZE[0] and 0 <= (y - move_y) < world.CONSTANT_WORLD_SIZE[1]:
+                
+                # If player is moving over coins, pick up and increment current count
+                if game_instance.world_grid[x - move_x][y - move_y] == world.CELL_TEXTURE_COIN:
+                    game_instance.increment_coin_count()
+                
                 # Prevent movement onto obstacles
                 if game_instance.world_grid[x - move_x][y - move_y] == world.CELL_TEXTURE_OBSTACLE:
                     continue
@@ -54,7 +59,7 @@ def player_move(move_x, move_y):
                     # Move player
                     game_instance.world_grid[x - move_x][y - move_y] = world.CELL_TEXTURE_PLAYER
                     game_instance.world_grid[x][y] = world.CELL_TEXTURE_NOTHING
-                    
+
                     # If player is moving out of bounds, assume world transition
                     if (x - move_x == 0) or \
                         (x - move_x == world.CONSTANT_WORLD_SIZE[0] - 1) or \
@@ -104,6 +109,11 @@ def random_move_monster():
                     if game_instance.world_grid[x - random_x][y - random_y] == (world.CELL_TEXTURE_OBSTACLE or world.CELL_TEXTURE_MONSTER):
                         indexes_to_ignore.append({x, y})
                         continue
+
+                    # If monster if moving onto player, initial GAME OVER status
+                    if game_instance.world_grid[x - random_x][y - random_y] == world.CELL_TEXTURE_PLAYER:
+                        print("GAME OVER")
+                        stop_program.set()
 
                     # Move monster
                     game_instance.world_grid[x - random_x][y - random_y] = world.CELL_TEXTURE_MONSTER

@@ -4,6 +4,7 @@ from enum import Enum
 # World details
 CONSTANT_WORLD_SIZE = (15, 15)
 CURRENT_WORLD_NUM = 0
+CURRENT_COINS_NUM = 0
 
 class Cardinals(Enum):
     North = 1
@@ -26,6 +27,9 @@ UI_GRID.append(['' for _ in range(CONSTANT_WORLD_SIZE[0])])
 UI_GRID[2][0] = '*'
 UI_GRID[2][1] = "WORLD"
 world_number = (2, 4)
+UI_GRID[2][5] = '|'
+UI_GRID[2][6] = 'COINS'
+coins_number = (2, 9)
 UI_GRID[2][CONSTANT_WORLD_SIZE[0] - 1] = '*'
 UI_GRID.append(['*' for _ in range(CONSTANT_WORLD_SIZE[0])])
 
@@ -61,6 +65,9 @@ def generate_random_world(world_num=CURRENT_WORLD_NUM, num_of_monsters=0, num_of
     # Set the world number
     UI_GRID[world_number[0]][world_number[1]] = str(world_num)
 
+    # Set the number of currently collected coins
+    UI_GRID[coins_number[0]][coins_number[1]] = str(CURRENT_COINS_NUM)
+
     # @TODO hardcoded player location
     map_grid[2][2] = CELL_TEXTURE_PLAYER
 
@@ -86,8 +93,10 @@ def generate_random_world(world_num=CURRENT_WORLD_NUM, num_of_monsters=0, num_of
             case Cardinals.North:
                 map_grid[0][int(CONSTANT_WORLD_SIZE[1] / 2)] = CELL_TEXTURE_NOTHING
 
-    # Generate all random objects on map
+    # Generate all random objects on map.
+    # Avoid replacing player spawn
     already_generated = []
+    already_generated.append({2, 2})
     generate_items_in_world(map_grid, num_of_objects, CELL_TEXTURE_OBSTACLE, already_generated)
     
     # Generate all coins randomly on map
