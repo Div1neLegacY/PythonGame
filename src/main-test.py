@@ -1,5 +1,6 @@
-import os, world
+import os, world, player
 from game import Game
+from player import Player
 from pynput import keyboard
 
 import time, threading, curses
@@ -9,7 +10,6 @@ Input Action / Game Mappings
 '''
 MOVEMENTS = {"up": (1, 0), "down": (-1, 0), "left": (0, 1), "right": (0, -1)}
 MOVEMENTS_MAP = {'w': MOVEMENTS["up"], 's': MOVEMENTS["down"], 'a': MOVEMENTS["left"], 'd': MOVEMENTS["right"]}
-ATTACK_DIRECTIONS = [(1, 0), (1, 1), (0, 1), (-1, 0), (0, -1), (-1, -1), (-1, 1), (1, -1)]
 
 stop_program = threading.Event()
 
@@ -24,6 +24,7 @@ def clear_terminal():
 '''
 Player Functions
 '''
+# @TODO Move into player.py
 def on_press(key):
     # Quit game
     if key == keyboard.Key.esc:
@@ -38,59 +39,66 @@ def on_press(key):
     elif key.char in MOVEMENTS_MAP:
         player_move(MOVEMENTS_MAP[key.char][0], MOVEMENTS_MAP[key.char][1])
 
-    display_map(stdscr, 0)
+    game_instance.display_map(stdscr, 0)
     # Stop the listener after the first key press
     return False
 
+# @TODO Move into player.py
 def player_move(move_x, move_y):
-    for x in range(world.CONSTANT_WORLD_SIZE[0]):
-        for y in range(world.CONSTANT_WORLD_SIZE[1]):
-            # Is the player moving within the board bounds?
-            if game_instance.world_grid[x][y] == world.CELL_TEXTURE_PLAYER and 0 <= (x - move_x) < world.CONSTANT_WORLD_SIZE[0] and 0 <= (y - move_y) < world.CONSTANT_WORLD_SIZE[1]:
+    x, y = player_instance.get_player_loc()
+    if game_instance.world_grid[x][y] == world.CELL_TEXTURE_PLAYER and 0 <= (x - move_x) < world.CONSTANT_WORLD_SIZE[0] and 0 <= (y - move_y) < world.CONSTANT_WORLD_SIZE[1]:
                 
-                # If player is moving over coins, pick up and increment current count
-                if game_instance.world_grid[x - move_x][y - move_y] == world.CELL_TEXTURE_COIN:
-                    game_instance.increment_coin_count()
+        # If player is moving over coins, pick up and increment current count
+        if game_instance.world_grid[x - move_x][y - move_y] == world.CELL_TEXTURE_COIN:
+            game_instance.increment_coin_count()
+            # @TODO Why is this broken?
+            #if (game_instance.get_coin_count() == 5):
+                #player_instance.upgrade_attack()
+
+        
+        # Prevent movement onto obstacles
+        if game_instance.world_grid[x - move_x][y - move_y] == world.CELL_TEXTURE_OBSTACLE:
+            return
+        else:
+            # Move player
+            player_instance.locX = x - move_x
+            player_instance.locY = y - move_y
+            game_instance.world_grid[x - move_x][y - move_y] = world.CELL_TEXTURE_PLAYER
+            game_instance.world_grid[x][y] = world.CELL_TEXTURE_NOTHING
+
+            # If player is moving out of bounds, assume world transition
+            if (x - move_x == 0) or \
+                (x - move_x == world.CONSTANT_WORLD_SIZE[0] - 1) or \
+                (y - move_y == 0) or \
+                (y - move_y == world.CONSTANT_WORLD_SIZE[1] - 1):
+                game_instance.regenerate_world()
+
+                # @TODO Hardcoded for now
+                player_instance.locX = 2
+                player_instance.locY = 2
+            return
                 
-                # Prevent movement onto obstacles
-                if game_instance.world_grid[x - move_x][y - move_y] == world.CELL_TEXTURE_OBSTACLE:
-                    continue
-                else:
-                    # Move player
-                    game_instance.world_grid[x - move_x][y - move_y] = world.CELL_TEXTURE_PLAYER
-                    game_instance.world_grid[x][y] = world.CELL_TEXTURE_NOTHING
-
-                    # If player is moving out of bounds, assume world transition
-                    if (x - move_x == 0) or \
-                        (x - move_x == world.CONSTANT_WORLD_SIZE[0] - 1) or \
-                        (y - move_y == 0) or \
-                        (y - move_y == world.CONSTANT_WORLD_SIZE[1] - 1):
-                        #world.CURRENT_WORLD_NUM += 1
-                        print("TEST")
-                        game_instance.regenerate_world()
-                    return
-
+# @TODO Move into player.py
 def player_attack():
     attack_locations = []
 
-    for x in range(world.CONSTANT_WORLD_SIZE[0]):
-        for y in range(world.CONSTANT_WORLD_SIZE[1]):
-            # Is the player moving within the board bounds
-            if game_instance.world_grid[x][y] == world.CELL_TEXTURE_PLAYER:
-                for dir in ATTACK_DIRECTIONS:
-                    if 0 <= (x - dir[0]) < world.CONSTANT_WORLD_SIZE[0] and 0 <= (y - dir[1]) < world.CONSTANT_WORLD_SIZE[1]:
-                        # Add attack texture near player
-                        game_instance.world_grid[x - dir[0]][y - dir[1]] = world.CELL_TEXTURE_ATTACK
-                        attack_locations.append((x - dir[0], y - dir[1]))
+    x, y = player_instance.get_player_loc()
+    # Is the player moving within the board bounds
+    if game_instance.world_grid[x][y] == world.CELL_TEXTURE_PLAYER:
+        for dir in player_instance.ATTACK_DIRECTIONS[2]:
+            if 0 <= (x - dir[0]) < world.CONSTANT_WORLD_SIZE[0] and 0 <= (y - dir[1]) < world.CONSTANT_WORLD_SIZE[1]:
+                # Add attack texture near player
+                game_instance.world_grid[x - dir[0]][y - dir[1]] = world.CELL_TEXTURE_ATTACK
+                attack_locations.append((x - dir[0], y - dir[1]))
     
     # Hacked animation sequence for attacks
     # Doing this here, prevents player from moving during attack.
-    display_map(stdscr, 0.15)
+    game_instance.display_map(stdscr, 0.15)
 
     for attack in attack_locations:
         game_instance.world_grid[attack[0]][attack[1]] = world.CELL_TEXTURE_ATTACK_AFTERMATH
 
-    display_map(stdscr, 0.15)
+    game_instance.display_map(stdscr, 0.15)
 
     for attack in attack_locations:
         game_instance.world_grid[attack[0]][attack[1]] = world.CELL_TEXTURE_NOTHING
@@ -120,35 +128,13 @@ def random_move_monster():
                     indexes_to_ignore.append({x - random_x, y - random_y})
                     game_instance.world_grid[x][y] = world.CELL_TEXTURE_NOTHING
 
-'''
-Updates map visuals via curses library.
-- stdscr: curses istance
-- interval: tick interval to display
-'''
-def display_map(stdscr, interval):
-    stdscr.clear()
-    max_y, max_x = stdscr.getmaxyx()
-    # Print out all display items: includes world and UI
-    for r_idx, row in enumerate(game_instance.world_grid):
-        for c_idx, element in enumerate(row):
-            # Calculate position for each element
-            y_pos = r_idx
-            x_pos = c_idx * 2  # Multiply by a factor for spacing between elements
-
-            # Check if the position is within screen bounds
-            if y_pos < max_y and x_pos < max_x:
-                stdscr.addstr(y_pos, x_pos, str(element))
-
-    stdscr.refresh()
-    time.sleep(interval)
-
 def tick(stdscr, interval):
     while not stop_program.is_set():
         '''
         Main Game Logic Code
         '''
         clear_terminal()
-        display_map(stdscr, interval)
+        game_instance.display_map(stdscr, interval)
 
         random_move_monster()
     print("Tick thread stopped.")
@@ -169,7 +155,7 @@ def main(stdscr_local):
     # Create and run a blocking thread for player input
     input_thread = threading.Thread(target=tick_input, args=[])
     
-    # Main game tick every 1s
+    # Main game tick
     tick_thread = threading.Thread(target=tick, args=[stdscr, 1])
 
     input_thread.start()
@@ -180,6 +166,10 @@ def main(stdscr_local):
 if __name__ == '__main__':
     global game_instance
     game_instance = Game()
+
+    global player_instance
+    player_instance = Player(game_instance, 2, 2)
+
     curses.wrapper(main)
     
     print("Game successfully shutdown.")
