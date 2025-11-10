@@ -111,7 +111,7 @@ class Player(GameObject):
             except:
                 # @TODO Need better way to do this, as this messes with the UI
                 # Projectile went off screen
-               continue
+               return
 
             # Hacked animation sequence for attacks
             # Doing this here, prevents player from moving during attack.

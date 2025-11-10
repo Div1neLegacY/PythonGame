@@ -12,7 +12,7 @@ class Cardinals(Enum):
     South = (1, 0)
     West  = (0, -1)
 
-CELL_TEXTURE_NOTHING = '_'
+CELL_TEXTURE_NOTHING = '.'
 CELL_TEXTURE_OBSTACLE = '#'
 CELL_TEXTURE_COIN = '@'
 CELL_TEXTURE_PLAYER = 'P'
