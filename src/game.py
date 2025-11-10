@@ -1,9 +1,11 @@
-import world, time
+import world, time, threading
 
 class Game:
-    def __init__(self):
+    def __init__(self, stdscr_local):
         self.world_grid = None
         self.regenerate_world()
+        self.stop_program = threading.Event()
+        self.stdscr_local = stdscr_local
 
     def increment_coin_count(self):
         world.CURRENT_COINS_NUM += 1
@@ -22,9 +24,9 @@ class Game:
     - stdscr: curses istance
     - interval: tick interval to display
     '''
-    def display_map(self, stdscr, interval):
-        stdscr.clear()
-        max_y, max_x = stdscr.getmaxyx()
+    def display_map(self, interval):
+        self.stdscr_local.clear()
+        max_y, max_x = self.stdscr_local.getmaxyx()
         # Print out all display items: includes world and UI
         for r, row in enumerate(self.world_grid):
             for c, element in enumerate(row):
@@ -34,7 +36,7 @@ class Game:
 
                 # Check if the position is within screen bounds
                 if y_pos < max_y and x_pos < max_x:
-                    stdscr.addstr(y_pos, x_pos, str(element))
+                    self.stdscr_local.addstr(y_pos, x_pos, str(element))
 
-        stdscr.refresh()
+        self.stdscr_local.refresh()
         time.sleep(interval)
