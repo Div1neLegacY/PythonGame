@@ -11,7 +11,7 @@ class Game:
         world.CURRENT_COINS_NUM += 1
         world.UI_GRID[world.coins_number[0]][world.coins_number[1]] = str(world.CURRENT_COINS_NUM)
 
-    def get_coin_count():
+    def get_coin_count(self):
         return world.CURRENT_COINS_NUM
 
     def regenerate_world(self):

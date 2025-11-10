@@ -77,16 +77,16 @@ def main(stdscr_local):
     # Main game tick
     tick_thread = threading.Thread(target=tick, args=[1])
 
+    # Experimental sprite with textual
+    #app = SpriteApp()
+    #app.run()
+
     input_thread.start()
     tick_thread.start()
     input_thread.join()
     tick_thread.join()
 
 if __name__ == '__main__':
-    # Experimental sprite with textual
-    #app = SpriteApp()
-    #app.run()
-
     curses.wrapper(main)
     
     print("Game successfully shutdown.")

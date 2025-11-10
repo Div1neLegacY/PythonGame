@@ -17,7 +17,7 @@ class Player(GameObject):
     CURRENT_ATTACK_LVL = 0
 
     def __init__(self, game_instance, locX, locY):
-        super().__init__(x=locX, y=locY)
+        super().__init__(x=locX, y=locY, game_instance=game_instance, obj_texture=world.CELL_TEXTURE_PLAYER)
         self.game_instance = game_instance
 
     def upgrade_attack(self):
@@ -51,9 +51,10 @@ class Player(GameObject):
             # If player is moving over coins, pick up and increment current count
             if self.game_instance.world_grid[x - move_x][y - move_y] == world.CELL_TEXTURE_COIN:
                 self.game_instance.increment_coin_count()
-                # @TODO Why is this broken?
-                #if (game_instance.get_coin_count() == 5):
-                    #player_instance.upgrade_attack()
+
+                # :: WEAPON UPGRADE GOAL ::
+                if (self.game_instance.get_coin_count() % 5 == 0):
+                    self.upgrade_attack()
             
             # Prevent movement onto obstacles
             if self.game_instance.world_grid[x - move_x][y - move_y] == world.CELL_TEXTURE_OBSTACLE:
@@ -61,8 +62,6 @@ class Player(GameObject):
             else:
                 # Move player
                 self.move(x - move_x, y - move_y)
-                self.game_instance.world_grid[x - move_x][y - move_y] = world.CELL_TEXTURE_PLAYER
-                self.game_instance.world_grid[x][y] = world.CELL_TEXTURE_NOTHING
 
                 # If player is moving out of bounds, assume world transition
                 if (x - move_x == 0) or \
@@ -81,8 +80,7 @@ class Player(GameObject):
         x, y = self.get_location()
         # Is the player moving within the board bounds
         if self.game_instance.world_grid[x][y] == world.CELL_TEXTURE_PLAYER:
-            # @TODO Remove magic number when upgrading attacks is fixed
-            for dir in self.ATTACK_DIRECTIONS[2]:
+            for dir in self.ATTACK_DIRECTIONS[self.CURRENT_ATTACK_LVL]:
                 if 0 <= (x - dir[0]) < world.CONSTANT_WORLD_SIZE[0] and 0 <= (y - dir[1]) < world.CONSTANT_WORLD_SIZE[1]:
                     # Add attack texture near player
                     self.game_instance.world_grid[x - dir[0]][y - dir[1]] = world.CELL_TEXTURE_ATTACK
@@ -104,23 +102,21 @@ class Player(GameObject):
         x, y = self.get_location()
         dirX, dirY = self.get_direction()
 
-        # @TODO
-        #projectile = Projectile(x + dirX, y + dirY)
-        #projectile.draw()
+        projectile = Projectile(self.game_instance, x + dirX, y + dirY)
 
         projectile_time = 5
         for i in range(1, projectile_time):
             try:
-                if i > 1:
-                    self.game_instance.world_grid[x + (dirX * (i - 1))][y + (dirY * (i - 1))] = world.CELL_TEXTURE_NOTHING
-                if i < (projectile_time - 1):
-                    self.game_instance.world_grid[x + (dirX * i)][y + (dirY * i)] = world.CELL_TEXTURE_PROJECTILE
-                else:
-                    self.game_instance.world_grid[x + (dirX * i)][y + (dirY * i)] = world.CELL_TEXTURE_NOTHING
+                projectile.move(x + (dirX * i), y + (dirY * i))
             except:
+                # @TODO Need better way to do this, as this messes with the UI
                 # Projectile went off screen
-                return
+               continue
 
             # Hacked animation sequence for attacks
             # Doing this here, prevents player from moving during attack.
             self.game_instance.display_map(0.05)
+
+        # Erase final projectile
+        x, y = projectile.get_location()
+        self.game_instance.world_grid[x][y] = world.CELL_TEXTURE_NOTHING
