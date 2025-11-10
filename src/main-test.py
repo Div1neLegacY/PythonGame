@@ -67,6 +67,7 @@ def main(stdscr_local):
     global game_instance
     game_instance = Game(stdscr_local)
 
+    # Initialize player at (2,2)
     global player_instance
     player_instance = Player(game_instance, 2, 2)
 

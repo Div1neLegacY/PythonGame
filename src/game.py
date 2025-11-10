@@ -21,7 +21,6 @@ class Game:
 
     '''
     Updates map visuals via curses library.
-    - stdscr: curses istance
     - interval: tick interval to display
     '''
     def display_map(self, interval):

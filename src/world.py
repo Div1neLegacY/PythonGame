@@ -7,10 +7,10 @@ CURRENT_WORLD_NUM = 0
 CURRENT_COINS_NUM = 0
 
 class Cardinals(Enum):
-    North = 1
-    East  = 2
-    South = 3
-    West  = 4
+    North = (-1, 0)
+    East  = (0, 1)
+    South = (1, 0)
+    West  = (0, -1)
 
 CELL_TEXTURE_NOTHING = '_'
 CELL_TEXTURE_OBSTACLE = '#'
@@ -19,6 +19,7 @@ CELL_TEXTURE_PLAYER = 'P'
 CELL_TEXTURE_MONSTER = 'M'
 CELL_TEXTURE_ATTACK = 'X'
 CELL_TEXTURE_ATTACK_AFTERMATH = 'x'
+CELL_TEXTURE_PROJECTILE = '*'
 
 # Default initialization, blank UI
 UI_GRID = [['' for _ in range(CONSTANT_WORLD_SIZE[0])]]
