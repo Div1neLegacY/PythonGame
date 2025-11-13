@@ -12,11 +12,6 @@ class Cardinals(Enum):
     South = (1, 0)
     West  = (0, -1)
 
-
-
-#curses.init_color(8, 1000, 500, 0)
-#curses.init_pair(3, 8, curses.COLOR_BLACK)
-
 CELL_TEXTURE_NOTHING = '.'
 CELL_TEXTURE_OBSTACLE = '#'
 CELL_TEXTURE_COIN = '@'
@@ -25,6 +20,21 @@ CELL_TEXTURE_MONSTER = 'M'
 CELL_TEXTURE_ATTACK = 'X'
 CELL_TEXTURE_ATTACK_AFTERMATH = 'x'
 CELL_TEXTURE_PROJECTILE = '*'
+
+
+'''
+Mapped function to easily get the curses color pairs for each texture in game
+'''
+def TextureToColorPair(texture_constant):
+    color_map = {
+        CELL_TEXTURE_NOTHING:  2,
+        CELL_TEXTURE_OBSTACLE: 3,
+        CELL_TEXTURE_PLAYER:   4,
+        CELL_TEXTURE_MONSTER:  5,
+        CELL_TEXTURE_COIN:     6,
+    }
+    # Return the mapped value if the key exists, otherwise return 1 (the default)
+    return color_map.get(texture_constant, 1)
 
 # Default initialization, blank UI
 UI_GRID = [['' for _ in range(CONSTANT_WORLD_SIZE[0])]]
@@ -66,7 +76,7 @@ def generate_random_world(world_num=CURRENT_WORLD_NUM, num_of_monsters=0, num_of
         raise ValueError("num_of_connections must be between 0 and 4 (inclusive).")
 
     # Generate a completely blank world
-    map_grid = [[CELL_TEXTURE_NOTHING for _ in range(CONSTANT_WORLD_SIZE[0])] for _ in range(CONSTANT_WORLD_SIZE[1])] + UI_GRID
+    map_grid = [[CELL_TEXTURE_NOTHING for _ in range(CONSTANT_WORLD_SIZE[0])] for _ in range(CONSTANT_WORLD_SIZE[1])]
 
     # Set the world number
     UI_GRID[world_number[0]][world_number[1]] = str(world_num)

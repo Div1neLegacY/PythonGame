@@ -13,20 +13,11 @@ class Game:
         curses.start_color()
         if curses.can_change_color():
             # Define color pairs
-            #curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_GREEN) # CELL_TEXTURE_NOTHING
             curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_GREEN) # Blue foreground, default background
             curses.init_pair(3, curses.COLOR_WHITE, 137) # Custom orange foreground, black background
-
-    '''
-    Mapping function to easily get the curses color pairs for each texture in game
-    '''
-    def TextureToColorPair(self, texture_constant):
-        if texture_constant == world.CELL_TEXTURE_NOTHING:
-            return 2
-        elif texture_constant == world.CELL_TEXTURE_OBSTACLE:
-            return 3
-        else:
-            return 1 # Default color
+            curses.init_pair(4, curses.COLOR_BLUE, curses.COLOR_BLUE)
+            curses.init_pair(5, curses.COLOR_RED, curses.COLOR_RED)
+            curses.init_pair(6, curses.COLOR_YELLOW, curses.COLOR_YELLOW)
 
     def increment_coin_count(self):
         world.CURRENT_COINS_NUM += 1
@@ -48,17 +39,25 @@ class Game:
         self.stdscr_local.clear()
         cell_width = 3
         max_y, max_x = self.stdscr_local.getmaxyx()
-        # Print out all display items: includes world and UI
+        current_y = 0
+        # Print out the world map
         for r, row in enumerate(self.world_grid):
+            y_pos = r
             for c, element in enumerate(row):
-                # Calculate position for each element
-                y_pos = r
                 display_str = f"{element:^{cell_width}}"
-
                 # Check if the position is within screen bounds
                 if y_pos < max_y and (c * cell_width) < max_x:
-                    self.stdscr_local.addstr(y_pos, c * cell_width, display_str, curses.color_pair(self.TextureToColorPair(element)) | curses.A_BOLD)
-        # @TODO: Separate UI section needed because the 3 spacing breaks UI
-        
+                    self.stdscr_local.addstr(y_pos, c * cell_width, display_str, curses.color_pair(world.TextureToColorPair(element)) | curses.A_DIM)
+            # Keep this position update for UI later
+            current_y = y_pos
+
+        # Print out UI separate from the world map
+        for r, row in enumerate(world.UI_GRID):
+            for c, element in enumerate(row):
+                y_pos = r + current_y
+                x_pos = c * 2
+                # Check if the position is within screen bounds
+                if y_pos < max_y and (c * cell_width) < max_x:
+                    self.stdscr_local.addstr(y_pos, x_pos, str(element))
         self.stdscr_local.refresh()
         time.sleep(interval)
