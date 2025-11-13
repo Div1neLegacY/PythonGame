@@ -62,7 +62,7 @@ def main(stdscr_local):
     global stdscr
     stdscr = stdscr_local
     clear_terminal()
-    
+
     # Initialize Game Instance
     global game_instance
     game_instance = Game(stdscr_local)

@@ -12,6 +12,11 @@ class Cardinals(Enum):
     South = (1, 0)
     West  = (0, -1)
 
+
+
+#curses.init_color(8, 1000, 500, 0)
+#curses.init_pair(3, 8, curses.COLOR_BLACK)
+
 CELL_TEXTURE_NOTHING = '.'
 CELL_TEXTURE_OBSTACLE = '#'
 CELL_TEXTURE_COIN = '@'

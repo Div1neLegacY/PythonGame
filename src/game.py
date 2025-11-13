@@ -1,4 +1,4 @@
-import world, time, threading
+import world, time, threading, curses
 
 class Game:
     def __init__(self, stdscr_local):
@@ -6,6 +6,27 @@ class Game:
         self.regenerate_world()
         self.stop_program = threading.Event()
         self.stdscr_local = stdscr_local
+        self.define_texture_colors()
+
+    def define_texture_colors(self):
+        # Define a custom color (if terminal supports it)
+        curses.start_color()
+        if curses.can_change_color():
+            # Define color pairs
+            #curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_GREEN) # CELL_TEXTURE_NOTHING
+            curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_GREEN) # Blue foreground, default background
+            curses.init_pair(3, curses.COLOR_WHITE, 137) # Custom orange foreground, black background
+
+    '''
+    Mapping function to easily get the curses color pairs for each texture in game
+    '''
+    def TextureToColorPair(self, texture_constant):
+        if texture_constant == world.CELL_TEXTURE_NOTHING:
+            return 2
+        elif texture_constant == world.CELL_TEXTURE_OBSTACLE:
+            return 3
+        else:
+            return 1 # Default color
 
     def increment_coin_count(self):
         world.CURRENT_COINS_NUM += 1
@@ -25,17 +46,19 @@ class Game:
     '''
     def display_map(self, interval):
         self.stdscr_local.clear()
+        cell_width = 3
         max_y, max_x = self.stdscr_local.getmaxyx()
         # Print out all display items: includes world and UI
         for r, row in enumerate(self.world_grid):
             for c, element in enumerate(row):
                 # Calculate position for each element
                 y_pos = r
-                x_pos = c * 2  # Multiply by a factor for spacing between elements
+                display_str = f"{element:^{cell_width}}"
 
                 # Check if the position is within screen bounds
-                if y_pos < max_y and x_pos < max_x:
-                    self.stdscr_local.addstr(y_pos, x_pos, str(element))
-
+                if y_pos < max_y and (c * cell_width) < max_x:
+                    self.stdscr_local.addstr(y_pos, c * cell_width, display_str, curses.color_pair(self.TextureToColorPair(element)) | curses.A_BOLD)
+        # @TODO: Separate UI section needed because the 3 spacing breaks UI
+        
         self.stdscr_local.refresh()
         time.sleep(interval)
