@@ -2,7 +2,7 @@ import random
 from enum import Enum
 
 # World details
-CONSTANT_WORLD_SIZE = (15, 15)
+CONSTANT_WORLD_SIZE = (25, 25)
 CURRENT_WORLD_NUM = 0
 CURRENT_COINS_NUM = 0
 

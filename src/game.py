@@ -50,7 +50,7 @@ class Game:
                     self.stdscr_local.addstr(y_pos, c * cell_width, display_str, curses.color_pair(world.TextureToColorPair(element)) | curses.A_DIM)
             # Keep this position update for UI later
             current_y = y_pos
-
+        
         # Print out UI separate from the world map
         for r, row in enumerate(world.UI_GRID):
             for c, element in enumerate(row):
